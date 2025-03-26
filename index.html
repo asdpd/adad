@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            margin: 0;
+        }
+        .menu {
+            background: linear-gradient(135deg, #333, #555);
+            width: 100%;
+            padding: 10px 0;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        .menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+        .menu ul li {
+            margin: 0 15px;
+            position: relative;
+        }
+        .menu ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s, transform 0.3s;
+        }
+        .menu ul li a:hover {
+            color: #ffcc00;
+            transform: scale(1.1);
+        }
+        .menu ul li ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #444;
+            padding: 10px 0;
+            list-style: none;
+            margin: 0;
+            width: 200px;
+            text-align: left;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .menu ul li:hover ul {
+            display: block;
+        }
+        .menu ul li ul li {
+            margin: 0;
+        }
+        .menu ul li ul li a {
+            padding: 10px;
+            display: block;
+            transition: background 0.1s;
+        }
+        .menu ul li ul li a:hover {
+            background: #555;
+        }
+        .quiz-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+            margin-top: 80px; /* Adjusted to account for the fixed menu */
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        .options button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .options button:hover {
+            background: #f0f0f0;
+        }
+        .correct {
+            background: #d4edda;
+        }
+        .incorrect {
+            background: #f8d7da;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu">
+        <ul>
+            <li>
+                <a href="#">Menu</a>
+                <ul>
+                    <li><a href="#">Equipamento EPI-EPR-ERA</a></li>
+                    <li><a href="#">SINALIZAÇÃO DE SEGURANÇA CONTRA INCÊNDIO</a></li>
+                    <li><a href="#">Elementos que compõem o fogo</a></li>
+                    <li><a href="#">Backdraft...</a></li>
+                    <li><a href="#">Classes de Incêndio</a></li>
+                    <li><a href="#">Cuidados com agentes extintores</a></li>
+                    <li><a href="#">Mangueiras de incêndio</a></li>
+                    <li><a href="#">Esguichos</a></li>
+                    <li><a href="#">Proteção Contra Incêndios</a></li>
+                    <li><a href="#">Extintores por metro quadrado</a></li>
+                    <li><a href="#">Atendimentos Operacionais</a></li>
+                    <li><a href="#">Código Q</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    <div class="quiz-container">
+        <div id="quiz"></div>
+        <button id="restart" class="hidden">Reiniciar</button>
+    </div>
+
+    <script src="questoes.js"></script>
+    <script>
+        let currentQuestionIndex = 0;
+        let shuffledQuestions = [];
+        let score = 0;
+
+        function shuffleQuestions() {
+            shuffledQuestions = questions.sort(() => Math.random() - 0.5);
+        }
+
+        function shuffleOptions(options) {
+            return options.sort(() => Math.random() - 0.5);
+        }
+
+        function showQuestion() {
+            const quizContainer = document.getElementById('quiz');
+            quizContainer.innerHTML = '';
+
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                const questionObj = shuffledQuestions[currentQuestionIndex];
+                const questionElement = document.createElement('div');
+                questionElement.classList.add('question');
+                questionElement.innerText = questionObj.question;
+
+                const optionsElement = document.createElement('div');
+                optionsElement.classList.add('options');
+
+                const shuffledOptions = shuffleOptions([...questionObj.options]);
+
+                shuffledOptions.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.innerText = option;
+                    button.onclick = () => checkAnswer(questionObj.options.indexOf(option), questionObj.answer, button);
+                    optionsElement.appendChild(button);
+                });
+
+                quizContainer.appendChild(questionElement);
+                quizContainer.appendChild(optionsElement);
+
+                const finishButton = document.createElement('button');
+                finishButton.innerText = 'Proximo';
+                finishButton.onclick = nextQuestion;
+                quizContainer.appendChild(finishButton);
+
+                const endButton = document.createElement('button');
+                endButton.innerText = 'Finalizar';
+                endButton.onclick = showRestartButton;
+                quizContainer.appendChild(endButton);
+            } else {
+                showRestartButton();
+            }
+        }
+
+        function checkAnswer(selectedIndex, correctIndex, button) {
+            if (selectedIndex === correctIndex) {
+                button.classList.add('correct');
+                score++;
+            } else {
+                button.classList.add('incorrect');
+                document.querySelectorAll('.options button')[correctIndex].classList.add('correct');
+            }
+            disableOptions();
+        }
+
+        function disableOptions() {
+            const buttons = document.querySelectorAll('.options button');
+            buttons.forEach(button => button.disabled = true);
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            showQuestion();
+        }
+
+        function showRestartButton() {
+            const quizContainer = document.getElementById('quiz');
+            quizContainer.innerHTML = `Quiz finalizado! Sua pontuação: ${score}/${shuffledQuestions.length}`;
+            document.getElementById('restart').classList.remove('hidden');
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            shuffleQuestions();
+            showQuestion();
+            document.getElementById('restart').classList.add('hidden');
+        }
+
+        document.getElementById('restart').onclick = restartQuiz;
+
+        shuffleQuestions();
+        showQuestion();
+    </script>
+</body>
+</html>
